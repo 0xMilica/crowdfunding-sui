@@ -4,24 +4,44 @@ module crowdfunding::crowdfunding;
 */
 module crowdfunding::crowdfunding{
     use sui::object::{Self, UID, ID};
-    use sui::coin::{Self, Coin};
-    use sui::balance::{Self, Balance};
-    use sui::sui::SUI;
+    use sui::tx_context::{Self, TxContext};
 
     struct Campaign has key {
-        id: UID,
-        raised_amount: u64,
+        uid: UID,
         target_amount: u64,
+        raised_amount: u64
     }
 
     //add campaign id to the receipt
-    //this is some sort of NFT
     struct FundingReceipt has key {
-        id: UID,
+        uid: UID,
         donated_amount: u64
     }
 
-    //add function create campaign
+    struct CampaignOwner has key{
+        uid: UID,
+        campaign_id: ID
+    }
+
+    //tx_content provides complete info on the tx being executed
+    public entry fun createCampaign(target_amount: u64, ctx: &mut TxContext){
+        //as per Move, this is the only way to create UIDs
+        let campaign_uid : UID = object::new(ctx);
+        //this is the way to extract the ID from the UID
+        let campaign_id : ID = object::uid_to_inner(&campaign_uid);
+
+        let campaign : Campaign = Campaign{
+            uid : campaign_uid,
+            target_amount: target_amount,
+            raised_amount: 0
+        };
+
+        let campaignOwner : CampaignOwner = CampaignOwner{
+            uid : object::new(ctx),
+            campaign_id: campaign_id
+        };
+
+    }
     //add function donate to the campaign
     //add function withdraw funds
 }
