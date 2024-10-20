@@ -85,7 +85,7 @@ module crowdfunding::crowdfunding{
     }
 
     public entry fun withdrawFunds(campaign: &mut Campaign, ownership: &CampaignOwner, ctx: &mut TxContext){
-        assert(&ownership.campaign_id == object::uid_as_inner(&campaign.id), 403);
+        assert!(&ownership.campaign_id == object::uid_as_inner(&campaign.id), 403);
 
         let raised_amount : RaisedAmount = RaisedAmount{id: object::new(ctx), raised_amount: campaign.raised_amount};
 
