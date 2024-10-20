@@ -8,6 +8,9 @@ module crowdfunding::crowdfunding{
     use sui::transfer;
     use sui::event;
     use std::string;
+    use sui::balance::{Self, Balance};  
+    use sui::sui::SUI;
+    use sui::coin::{Self, Coin};
 
     //event though this is UID type, we can't name it 'uid'
     //we have to name it 'id'
@@ -33,6 +36,11 @@ module crowdfunding::crowdfunding{
         message: string::String
     }
 
+    struct RaisedAmount has key, store {
+        id: UID,
+        raised_amount: u64
+    }
+
     //tx_content provides complete info on the tx being executed
     public entry fun createCampaign(target_amount: u64, ctx: &mut TxContext){
         //as per Move, this is the only way to create UIDs
@@ -52,11 +60,12 @@ module crowdfunding::crowdfunding{
         };
 
         transfer::transfer(campaignOwner, tx_context::sender(ctx));
-
+        //for everyone to be able to donate
         transfer::share_object(campaign);
     }
+
     //add function donate to the campaign
-    public entry fun donate(campaign : &mut Campaign, amount: u64, ctx: &mut TxContext){
+    public entry fun fundCampaign(campaign : &mut Campaign, amount: u64, ctx: &mut TxContext){
         let donated_amount = amount;
 
         //add the amount to the campaign
@@ -74,5 +83,12 @@ module crowdfunding::crowdfunding{
 
         transfer::transfer(fundingReceipt, tx_context::sender(ctx));
     }
-    //add function withdraw funds
+
+    public entry fun withdrawFunds(campaign: &mut Campaign, ownership: &CampaignOwner, ctx: &mut TxContext){
+        assert(&ownership.campaign_id == object::uid_as_inner(&campaign.id), 403);
+
+        let raised_amount : RaisedAmount = RaisedAmount{id: object::new(ctx), raised_amount: campaign.raised_amount};
+
+        transfer::public_transfer(raised_amount, tx_context::sender(ctx));
+    }
 }
